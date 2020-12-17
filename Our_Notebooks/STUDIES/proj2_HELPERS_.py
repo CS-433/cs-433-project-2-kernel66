@@ -40,6 +40,7 @@ from yellowbrick.features.radviz import radviz
 
 ########################################### FEATURE - ENGINEERING ############################################################
 
+
 def delete_minus1(X): 
     """ Delete columns and rows which contain unknowns (-1)
     we first start by removing columns and then the rows
@@ -67,10 +68,9 @@ def delete_minus1(X):
     return Xp
 
 
-
 def make_ones_indicator_column(data_frame, name_of_column_target, inplace=False):
-    """ For each column we add an indicator column which adds a '1' for when the information 
-    is known (1 or 0) and adds a '0' for the data is unknown (-1). Same name as the target column and suffix _indicator
+    """ For a desired column we add an indicator column full of '1's, of the same name as the target column but
+    with suffix '_indicator'.
     If the indicator column already exists: function does nothing.
     
     Parameters
@@ -79,7 +79,7 @@ def make_ones_indicator_column(data_frame, name_of_column_target, inplace=False)
     
     name_of_column_target: Column which will be given an indicator column
     
-    inplace = State whether the cahnge must be a copy or an inplace operation (Default = False)
+    inplace = State whether the change must be a copy or an inplace operation (Default = False)
 
     Returns
     -------
@@ -99,7 +99,6 @@ def make_ones_indicator_column(data_frame, name_of_column_target, inplace=False)
             return df_temp
 
 
-
 def put_zero_in_indicator_column(data_frame, name_of_column_target, target_value, inplace=False):
     """ Finds in the indicator column the lines where the target column has target value, and puts 0 there
     
@@ -112,7 +111,7 @@ def put_zero_in_indicator_column(data_frame, name_of_column_target, target_value
     
     target_value: value that will be change to zero each time it is encountered
 
-    inplace = State whether the cahnge must be a copy or an inplace operation (Default = False)
+    inplace = State whether the change must be a copy or an inplace operation (Default = False)
     Returns
     -------
     
@@ -125,23 +124,27 @@ def put_zero_in_indicator_column(data_frame, name_of_column_target, target_value
         df_temp = data_frame.copy()
         df_temp.loc[df_temp[name_of_column_target] == target_value, name_of_column_target + '_indicator'] = 0
         return df_temp
-    
 
-
-
-# adds a column to the right, with name of target + _indicator, with 0 on same line as the target column has target value
 
 def make_indicator_for_bad_data(data_frame, name_of_column_target, target_value, inplace=False):
-    """ Looking at 
+    """ Adds a column to the right of data_frame, with name of target + _indicator,
+    with 0 on same line as the target column has target value
+    (If the indicator column already exists, it will work on it instead of creating another)
 
     Parameters
     ----------
-    X: matrix of features
+    data_frame: a data frame
+    
+    name_of_column_target: The name of the column to make an indicator for
+    
+    target_value: The value to be associated with 0 in the indicator column
+    
+    inplace = State whether the change must be a copy or an inplace operation (Default = False)
 
     Returns
     -------
     
-    - A plot with correlation features
+    - A data frame with an extra indicator column for the target column, highlighting the target value
     
     """
     if inplace:
@@ -153,21 +156,25 @@ def make_indicator_for_bad_data(data_frame, name_of_column_target, target_value,
         return df_temp
 
 
-
-# Makes columns iteratively using make_indicator_for_bad_data
-# putting several times the same column name in list to search for multiple targets in that column.
-
 def make_indicators(data_frame, list_of_column_target, list_of_target_values, inplace=False):
-    """ Looking at 
+    """ Iteratively calls make_indicator_for_bad_data for on the data frame,
+    for each element of the lists of columns and target values.
+    (Putting the same column name in the list several times allows to hunt multiple target values in said column)
 
     Parameters
     ----------
-    X: matrix of features
+    data_frame: a data frame
+    
+    list_of_column_target: a list of the names of the columns on which to make indicators
+    
+    list_of_target_values: a list of target values for the corresponding target column in list_of_target_columns
+    
+    inplace = State whether the change must be a copy or an inplace operation (Default = False)
 
     Returns
     -------
     
-    - A plot with correlation features
+    - The data frame with all the indicator columns appended.
     
     """
     if not inplace:
@@ -180,62 +187,43 @@ def make_indicators(data_frame, list_of_column_target, list_of_target_values, in
         return df_temp
     
 
-
-
-from sklearn.impute import SimpleImputer
-
-def handle_missing_values(X, target_values):
-    """ Using KNN algorithm to predict missing values
-
-    Parameters
-    ----------
-    X: matrix of features
-
-    Returns
-    -------
-    
-    - A plot with correlation features
-    
-    """
-    
-    imputer = SimpleImputer(missing_values= target_values)
-    mod = imputer.fit(X)
-    X_trans = pd.DataFrame(mod.transform(X))
-    X_trans.columns = X.columns
-    return X_trans
-
- 
-
-# to extract just one subset of data:
 def extract_certain_dataset(data_frame, name_of_target_column, target_value):
-    """ Using KNN algorithm to predict missing values
+    """ Extracts a subset of the dataset, where all the rows of the target column have target value
 
     Parameters
     ----------
-    X: matrix of features
+    data_frame: a data frame
+    
+    name_of_target_column: the name of the column to target
+    
+    target_value: the value to extract the subset around
 
     Returns
     -------
     
-    - A plot with correlation features
+    - a data frame (subset of data_frame) with all rows with target value in target column
     
     """
     df = data_frame[data_frame[name_of_target_column] == target_value].copy()
     return df
 
 
-# to separate the dataframe in subgroups depending on the values in the target column.
 def make_list_by_value(data_frame, name_of_target_column, name_of_reference_column):
-    """ Using KNN algorithm to predict missing values
+    """  Will create a list of data frames all subset disjoint of data_frame, for all values the target column can take.
+    (It will also set the reference column as index for all the data frames)
 
     Parameters
     ----------
-    X: matrix of features
+    data_frame: a data frame
+    
+    name_of_target_column: the name of the column whose entries will determine the separation
+    
+    name_of_reference_column: the name of the column to set as index
 
     Returns
     -------
     
-    - A plot with correlation features
+    - a list of data frames.
     
     """
     list_of_df = []
@@ -245,38 +233,49 @@ def make_list_by_value(data_frame, name_of_target_column, name_of_reference_colu
     return list_of_df
 
 
-# first separates the original dataset into subgroups corresponding to values on the target column,
-# and then puts them back toghether, but horizontally intead of vertically. Aloigned around the reference column.
 def rearange_horizontally(data_frame, name_of_target_column, name_of_reference_column):
-    """ Using KNN algorithm to predict missing values
+    """ First separates the original dataset into subgroups corresponding to values on the target column,
+    and then puts them back together, but horizontally instead of vertically. Aligned around the reference column.
+    This function is used to create the data frame that separates the days
+    If data_frame is of shape (n x m) and the target column takes k different values (assuming they are balanced),
+    then the output will be of size (n/k x km)
+
 
     Parameters
     ----------
-    X: matrix of features
+    
+    data_frame: a data frame
+    
+    name_of_target_column: the name of the column around which the data frame will be rearranged
+    
+    name_of_reference_column: the name of the column to set as index
 
     Returns
     -------
     
-    - A plot with correlation features
+    - a data frame. It contains exactly the same data as data_frame,
+        but rearranged horizontally following the values of the target column
     
     """
     list_of_df = make_list_by_value(data_frame, name_of_target_column, name_of_reference_column)
-    return pd.concat(list_of_df, axis=1, sort=False)#.reset_index()
-    
+    return pd.concat(list_of_df, axis=1, sort=False)
 
-# ouputs a list of sub-dataframes. One for each different value in the targeted column 
-# (slightly different from make_list_by_value because of context of use)
+
 def dissassemble(data_frame, name_of_column_target):
-    """ Using KNN algorithm to predict missing values
+    """ makes a list of data frames subsets disjoint of data_frame. Almost identical to make_list_by_value.
+    The only difference with make_list_by_value is that there aren't any column set to index
 
     Parameters
     ----------
-    X: matrix of features
+    
+    data_frame: a data frame
+    
+    name_of_column_target: name of the column around which the separation is done
 
     Returns
     -------
     
-    - A plot with correlation features
+    - a list of data frames
     
     """
     out_list=[]
@@ -286,55 +285,59 @@ def dissassemble(data_frame, name_of_column_target):
     return out_list
 
 
-# outputs a list of lists of sub-dataframes. (calls dissassemble twice)
 def fine_dissassembly(data_frame, name_first_column_target, name_second_column_target):
-    """ Using KNN algorithm to predict missing values
+    """ Calls dissassemble twice to output a matrix of subsets disjoint of data_frame.
 
     Parameters
     ----------
-    X: matrix of features
+    data_frame: a data frame
+    
+    name_first_column_target: the name of the column around which the first separation will be made
+    
+    name_second_column_target: the name of the column for the second separation
 
     Returns
     -------
     
-    - A plot with correlation features
+    - a list of list of data frames.
     
     """
+    
     out_list = dissassemble(data_frame, name_first_column_target)
     for i, subdf in enumerate(out_list):
         out_list[i] = dissassemble(subdf, name_second_column_target)
     return out_list
 
 
-# Undoes dissassemble
 def reassemble(list_of_df):
-    """ Using KNN algorithm to predict missing values
-
+    """ Does the opposit of dissassemble.
+    Makes a single data frame out of a list of data frames by concatenating them
+    
     Parameters
     ----------
-    X: matrix of features
+    list_of_df: a list of data frames
 
     Returns
     -------
     
-    - A plot with correlation features
+    - a data frame
     
     """
     return pd.concat(list_of_df)
 
 
-# Undoes fine_dissassembly
 def big_reassembly(list_of_list_of_df):
-    """ Using KNN algorithm to predict missing values
+    """ Does the opposite of fine_dissassembly.
+    Creates a single data frame out of a matrix of smaller data frames
 
     Parameters
     ----------
-    X: matrix of features
+    list_of_list_of_df: a list of lists of data frames
 
     Returns
     -------
     
-    - A plot with correlation features
+    - a single data frame. The concatenation of all of the data frames
     
     """
     for i, sublist in enumerate(list_of_list_of_df):
@@ -343,16 +346,19 @@ def big_reassembly(list_of_list_of_df):
    
 
 def subtract_list(list1, list2):
-    """ Using KNN algorithm to predict missing values
+    """ Substracts two lists and return the difference.
+    Creates a list with all the elements of list1 except those that are also in list2
 
     Parameters
     ----------
-    X: matrix of features
+    list1: A list
+    
+    list2: A list
 
     Returns
     -------
     
-    - A plot with correlation features
+    - A list. The difference between the two lists
     
     """
     list3= []
@@ -362,40 +368,50 @@ def subtract_list(list1, list2):
     return list3
 
 
-# just running df = transform_into_horizontal_df(data_frame) will do all the work, provided the dataset does not have more than one observation per day.
-# Will separate the dataset into smaller datasets corresponding to the values of 'time_elapsed' and then concatenate everything horizontally.
 def transform_into_horizontal_df(data_frame, 
                                  reference_column='msfid', 
                                  current_time_column='datclin', 
                                  first_day_column='first_date', 
                                  no_need_duplicate_columns=['sex', 'dt', 'time_stayed', 'outcome', 'datsym', 'age'],
                                  columns_to_readd_at_end=['sex', 'age', 'outcome']):
-    """ Using KNN algorithm to predict missing values
+    """ Function to rearrange the data frame into an horizontal version with most of the columns repeated,
+    except those blacklisted.
+    The function is very situational.
+    Recommended use : df = transform_into_horizontal_df(data_frame) (when data_frame has only one observation per day)
 
     Parameters
     ----------
-    X: matrix of features
+    data_frame: Input data frame
+    
+    reference_column: (Default = 'msfid')
+    
+    current_time_column: (Default = 'datclin')
+    
+    first_day_column: (Default = 'first_date')
+    
+    no_need_duplicate_columns: Columns that should not be duplicated when assembling the dataframes (Default = ['sex', 'dt', 'time_stayed', 'outcome', 'datsym', 'age'])
+    
+    columns_to_readd_at_end: Columns that will be added at the end of the dataframe (Default = ['sex', 'age', 'outcome'])
 
     Returns
     -------
     
-    - A plot with correlation features
+    - Returns the original data frame concatenated horizontally by "time_elapsed"
     
     """
     rest = subtract_list(data_frame.columns, no_need_duplicate_columns)
-    df_to_rearange = data_frame[rest].copy()
+    df_to_rearange = data_frame[rest].copy()    # Finds the columns that have information that depends on the day
     df_to_rearange['time_elapsed'] = df_to_rearange[current_time_column] - df_to_rearange[first_day_column]
-    df_rearanged = rearange_horizontally(df_to_rearange, 'time_elapsed', reference_column)
+    df_rearanged = rearange_horizontally(df_to_rearange, 'time_elapsed', reference_column)  # rearranges around the day
     df_rearanged = df_rearanged.reset_index()
-    df_rearanged = df_rearanged.rename(index=str, columns={'index':'msfid'})
-    df_tail = data_frame[[reference_column] + columns_to_readd_at_end].copy()
-    df_tail_shrunk = df_tail.groupby(reference_column).nth(0)
+    df_rearanged = df_rearanged.rename(index=str, columns={'index':'msfid'})    # somehow the name of the index is lost
+    df_tail = data_frame[[reference_column] + columns_to_readd_at_end].copy()   # get the columns to re-add
+    df_tail_shrunk = df_tail.groupby(reference_column).nth(0)                   # transform them to the right shape
     df_rearanged_with_end = pd.merge(df_rearanged.set_index(reference_column), df_tail_shrunk, left_index=True, right_index=True, how='inner')
     return df_rearanged_with_end.reset_index()
 
 
 ########################################### DATA - VISUALIZATION ##############################################################
-
 
 
 def Corr_vision(X):
@@ -419,6 +435,7 @@ def Corr_vision(X):
     #visualizer.show('corr_matrix') // to output png
     plt.show()
 
+
 def Imbalance(y):
     """ Imabalance between the labels
 
@@ -439,6 +456,7 @@ def Imbalance(y):
     #visualizer.show('class_balance')        # Finalize and render the figure
     plt.show()
 
+
 def Imbalance_out(y):
     """ Imabalance between the labels
 
@@ -458,9 +476,10 @@ def Imbalance_out(y):
     visualizer.fit(y)                        # Fit the data to the visualizer
     #visualizer.show('class_balance')        # Finalize and render the figure
     plt.show()
-    
+
+
 def Rad_vision(X,y):
-    """ Radial distrubtions of cases around the systems, a method to detect separability between classes
+    """ Radial distributions of cases around the systems, a method to detect separability between classes
 
     Parameters
     ----------
@@ -471,7 +490,7 @@ def Rad_vision(X,y):
     Returns
     -------
     
-    - A radial plot, with the labels and the features at the circonference
+    - A radial plot, with the labels and the features at the circumference
     
     """
 
@@ -479,8 +498,9 @@ def Rad_vision(X,y):
     radviz(X, y.values, classes = ['Ebola negative', 'Ebola positive'])
     plt.show()
 
+
 def Rad_vision_out(X,y):
-    """ Radial distrubtions of cases around the systems, a method to detect separability between classes
+    """ Radial distributions of cases around the systems, a method to detect separability between classes
 
     Parameters
     ----------
@@ -491,7 +511,7 @@ def Rad_vision_out(X,y):
     Returns
     -------
     
-    - A radial plot, with the labels and the features at the circonference
+    - A radial plot, with the labels and the features at the circumference
     
     """
     fig, ax = plt.subplots(figsize=(20,10))
@@ -499,6 +519,7 @@ def Rad_vision_out(X,y):
     plt.show()
     
 
+# Different functions due to different labels
 def score_model(X_train, y_train, X_test, y_test, model,  **kwargs):
     """ A function that returns the different metrics of accuracy, confusion matrix and other model reports depending on the type of model that is asked.
     
@@ -529,7 +550,6 @@ def score_model(X_train, y_train, X_test, y_test, model,  **kwargs):
     
     """
 
-    
     # Train the model
     model.fit(X_train, y_train, **kwargs)
     
@@ -539,7 +559,7 @@ def score_model(X_train, y_train, X_test, y_test, model,  **kwargs):
     # Compute metrics for the train set
     accuracy_train = accuracy_score(y_train, prediction_train)
     
-    #False Positive Rate, True Positive Rate, Threshold
+    # False Positive Rate, True Positive Rate, Threshold
     fpr_train, tpr_train, thresholds_train = roc_curve(y_train, prediction_train)
     auc_train = auc(fpr_train, tpr_train)
     
@@ -564,10 +584,10 @@ def score_model(X_train, y_train, X_test, y_test, model,  **kwargs):
     fig, axes = plt.subplots(3, 2, figsize = (20,20))
 
     visualgrid = [
-    ConfusionMatrix(model, ax=axes[0][0], classes=['Ebola Negative', 'Ebola Positive'], cmap="YlGnBu"),
-    ClassificationReport(model, ax=axes[0][1], classes=['Ebola Negative', 'Ebola Positive'],cmap="YlGn",),
-    PrecisionRecallCurve(model, ax=axes[1][0]),
-    ClassPredictionError(model, classes=['Ebola Negative', 'Ebola Positive'], ax=axes[1][1]),
+        ConfusionMatrix(model, ax=axes[0][0], classes=['Ebola Negative', 'Ebola Positive'], cmap="YlGnBu"),
+        ClassificationReport(model, ax=axes[0][1], classes=['Ebola Negative', 'Ebola Positive'],cmap="YlGn",),
+        PrecisionRecallCurve(model, ax=axes[1][0]),
+        ClassPredictionError(model, classes=['Ebola Negative', 'Ebola Positive'], ax=axes[1][1]),
     ]
 
     for viz in visualgrid:
@@ -590,10 +610,7 @@ def score_model(X_train, y_train, X_test, y_test, model,  **kwargs):
         
     plt.show()
     print('\n')
-    
-    
-    
-    
+
 
 def score_model_outcome(X_train, y_train, X_test, y_test, model,  **kwargs):
     """ A function that returns the different metrics of accuracy, confusion matrix and other model reports depending on the type of model that is asked.
@@ -634,7 +651,7 @@ def score_model_outcome(X_train, y_train, X_test, y_test, model,  **kwargs):
     # Compute metrics for the train set
     accuracy_train = accuracy_score(y_train, prediction_train)
     
-    #False Positive Rate, True Positive Rate, Threshold
+    # False Positive Rate, True Positive Rate, Threshold
     fpr_train, tpr_train, thresholds_train = roc_curve(y_train, prediction_train)
     auc_train = auc(fpr_train, tpr_train)
     
@@ -644,7 +661,6 @@ def score_model_outcome(X_train, y_train, X_test, y_test, model,  **kwargs):
     prediction_test = model.predict(X_test)
     
     accuracy_test = accuracy_score(y_test, prediction_test)
-    
 
     fpr_test, tpr_test, thresholds_test = roc_curve(y_test, prediction_test)
     auc_test = auc(fpr_test, tpr_test)
@@ -659,12 +675,11 @@ def score_model_outcome(X_train, y_train, X_test, y_test, model,  **kwargs):
     
     fig, axes = plt.subplots(3, 2, figsize = (20,20))
 
-
     visualgrid = [
-    ConfusionMatrix(model, ax=axes[0][0], classes=['Death', 'Survival'], cmap="YlGnBu"),
-    ClassificationReport(model, ax=axes[0][1], classes=['Death', 'Survival'],cmap="YlGn",),
-    PrecisionRecallCurve(model, ax=axes[1][0]),
-    ClassPredictionError(model, classes=['Death', 'Survival'], ax=axes[1][1]),
+        ConfusionMatrix(model, ax=axes[0][0], classes=['Death', 'Survival'], cmap="YlGnBu"),
+        ClassificationReport(model, ax=axes[0][1], classes=['Death', 'Survival'],cmap="YlGn",),
+        PrecisionRecallCurve(model, ax=axes[1][0]),
+        ClassPredictionError(model, classes=['Death', 'Survival'], ax=axes[1][1]),
     ]
 
     for viz in visualgrid:
@@ -689,14 +704,46 @@ def score_model_outcome(X_train, y_train, X_test, y_test, model,  **kwargs):
     print('\n')
 
 
-
+# Different functions due to different labels
 def PCA_vision_3D(X,y):
+    """ Visualizes 3D PCA for diagnosis
+
+
+    Parameters
+    ----------
+    X: matrix of features
+    
+    y: target labels for diagnosis
+
+    Returns
+    -------
+    
+    - 3D PCA plot 
+    
+    """
     visualizer = PCA_3D(scale=True, projection=3, classes=['Ebola negative', 'Ebola positive'])
     visualizer.fit_transform(X, y)
     #visualizer.show()
     plt.show()
 
+
 def PCA_vision_3D_out(X,y):
+    """ Visualizes 3D PCA for prognosis
+
+
+    Parameters
+    ----------
+    X: matrix of features
+    
+    y: target labels for prognosis
+
+    Returns
+    -------
+    
+    - 3D PCA plot for prognosis
+    
+    """
+    
     visualizer = PCA_3D(scale=True, projection=3, classes=['Survival', 'Death'])
     visualizer.fit_transform(X, y)
     #visualizer.show()
@@ -704,50 +751,4 @@ def PCA_vision_3D_out(X,y):
 
 
 
-    
-def Random_forest(X_train,y_train,n_est, index_tree,max_depth,sample_split):
-    """Perform random forest.
 
-    Parameters
-    ----------
-    X_train: matrix of features (training set)
-    y_train: Labels (training set)
-    
-    n_est: number of estimators (aka number of trees)
-    
-    sample_split: minimum number of sample to require a split (aka min_samples_split)
-    
-    split: default = 0.3, percentage used for testing in split_data function
-    
-    index_tree : Which decision tree to visualize
-        
-    Returns
-    -------
-    - 
-    
-    """
-
-    clf = RandomForestClassifier(n_estimators=n_est, max_depth=max_depth, min_samples_split = sample_split, random_state = 123)
-    clf = clf.fit(X_train, y_train)
-    y_pred = clf.predict_proba(X_test)
-
-    print(clf.estimators_[index_tree])
-    
-    accuracy_all(y_test, y_pred)
-
-    dot_data_forest =export_graphviz(
-    clf.estimators_[2],
-    out_file=None,
-    feature_names=X.columns,
-    class_names=['Not a case', 'Confirmed'],
-    label='root',
-    filled=True,
-    rounded=True,
-    impurity=False,
-    proportion=True)
-    graph_forest = graphviz.Source(dot_data_forest)
-    #graph_forest.render("Decision_forest") // output 
-
-
-    
-     
