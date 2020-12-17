@@ -77,6 +77,7 @@ Running the notebooks in each study will recreate our predictions, however it ne
 The most important notebooks, i.e. those containing the vast majority of our work, are the following:
 
 `study_EIXUZQ` → `study_EIXUZQ.ipynb`
+
 `study_EGOYQN` → `study_EGOYQN_linelist_diagnosis.ipynb`, `study_EGOYQN_linelist_prognosis.ipynb`, `study_EGOYQN_clinical.ipynb`
 
 
